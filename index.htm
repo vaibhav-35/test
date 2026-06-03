@@ -1020,7 +1020,9 @@
         sum += v * v;
       }
       const rms = Math.sqrt(sum / data.length);
-      if(rms > 0.06){
+micStatus.textContent =
+  "Mic level: " + rms.toFixed(3);
+      if(rms > 0.04){
         blowOut();
         return;
       }
