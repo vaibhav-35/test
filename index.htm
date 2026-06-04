@@ -1,1 +1,1123 @@
-Coming soon
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>NEHUOS // Birthday Protocol v4</title>
+<style>
+  :root{
+    --bg0:#03040a;
+    --bg1:#08091a;
+    --bg2:#1a1240;
+    --text:#f7f5ff;
+    --muted:#c9c5e4;
+    --line:rgba(255,255,255,.16);
+    --glass:rgba(255,255,255,.08);
+    --shadow:0 22px 70px rgba(0,0,0,.38);
+  }
+  *{box-sizing:border-box}
+  html,body{
+    height:100%;
+    margin:0;
+    overflow:hidden;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(circle at 20% 20%, rgba(109,80,255,.18), transparent 24%),
+      radial-gradient(circle at 80% 30%, rgba(255,255,255,.09), transparent 18%),
+      radial-gradient(circle at 50% 78%, rgba(120,57,180,.2), transparent 30%),
+      linear-gradient(180deg, var(--bg2), var(--bg1) 36%, var(--bg0));
+  }
+
+  .stars,.stars::before,.stars::after{
+    position:fixed;
+    inset:0;
+    content:"";
+    pointer-events:none;
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(255,255,255,.9) 0 1px, transparent 1.4px),
+      radial-gradient(circle at 34% 72%, rgba(255,255,255,.8) 0 1px, transparent 1.4px),
+      radial-gradient(circle at 61% 24%, rgba(255,255,255,.75) 0 1px, transparent 1.4px),
+      radial-gradient(circle at 85% 63%, rgba(255,255,255,.95) 0 1px, transparent 1.4px),
+      radial-gradient(circle at 75% 12%, rgba(255,255,255,.72) 0 1px, transparent 1.4px),
+      radial-gradient(circle at 20% 88%, rgba(255,255,255,.7) 0 1px, transparent 1.4px);
+    opacity:.58;
+    animation: drift 28s linear infinite;
+  }
+  .stars::before{opacity:.34; transform:translateY(-28px); animation-duration:36s}
+  .stars::after{opacity:.22; transform:translateY(18px); animation-duration:44s}
+  @keyframes drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(0,-44px,0)}}
+
+  .screen{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:22px;
+    text-align:center;
+  }
+  .screen.active{display:flex}
+  .wrap{
+    width:min(780px,100%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+  .card,.bootbox,.overlayCard{
+    width:min(700px,100%);
+    padding:24px 20px;
+    border-radius:28px;
+    background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+    border:1px solid var(--line);
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(18px);
+  }
+  .bootbox{padding:28px 22px}
+  .title{
+    margin:0 0 6px;
+    font-size:clamp(1.2rem,2.7vw,2rem);
+    font-weight:800;
+    letter-spacing:.2em;
+  }
+  .big{
+    margin:0;
+    font-size:clamp(1.05rem,2.2vw,1.35rem);
+    line-height:1.65;
+    white-space:pre-line;
+  }
+  .tiny{
+    margin:0;
+    color:rgba(255,255,255,.74);
+    font-size:.92rem;
+    line-height:1.45;
+  }
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.12);
+    color:var(--muted);
+    font-size:.84rem;
+    letter-spacing:.03em;
+  }
+  .pulse{
+    width:11px;
+    height:11px;
+    border-radius:999px;
+    background:#fff;
+    box-shadow:0 0 0 0 rgba(255,255,255,.45);
+    animation:pulse 1.5s infinite;
+    flex:none;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(255,255,255,.35)}
+    70%{box-shadow:0 0 0 18px rgba(255,255,255,0)}
+    100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}
+  }
+  .row{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:12px;
+    margin-top:4px;
+  }
+  button{
+    appearance:none;
+    border:0;
+    border-radius:16px;
+    padding:13px 18px;
+    min-width:140px;
+    background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(230,224,255,.88));
+    color:#181427;
+    font-weight:750;
+    font-size:16px;
+    box-shadow:0 10px 28px rgba(0,0,0,.22);
+    cursor:pointer;
+    transition:transform .14s ease, filter .14s ease, opacity .14s ease, left .18s ease, top .18s ease;
+  }
+  button:active{transform:scale(.97)}
+  button.secondary{
+    background:transparent;
+    color:var(--text);
+    border:1px solid rgba(255,255,255,.24);
+    box-shadow:none;
+  }
+  button:disabled{opacity:.6; cursor:default}
+  .running{position:fixed !important; z-index:9999}
+  .typeArea{min-height:7.3em}
+  .fade{animation:fadeIn .28s ease}
+  @keyframes fadeIn{
+    from{opacity:0; transform:translateY(10px)}
+    to{opacity:1; transform:translateY(0)}
+  }
+
+  .stage{display:flex; flex-direction:column; gap:14px; align-items:center}
+  .stageBox{
+    min-height:9.5em;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+  }
+  .stageText{
+    max-width:620px;
+    margin:0 auto;
+    font-size:clamp(1.07rem,2.3vw,1.35rem);
+    line-height:1.68;
+    white-space:pre-line;
+  }
+
+  /* Hunt */
+  #hunt{
+    background:
+      radial-gradient(circle at 50% 45%, rgba(92,64,181,.34), transparent 18%),
+      radial-gradient(circle at 50% 45%, rgba(255,255,255,.08), transparent 40%),
+      linear-gradient(180deg, #02050d, #00050b);
+    touch-action:none;
+  }
+  #mask{
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle at 50% 50%, transparent 90px, rgba(0,0,0,.97) 165px);
+    pointer-events:none;
+    transition:background .03s linear;
+  }
+  .daisy{
+    position:absolute;
+    font-size:42px;
+    user-select:none;
+    cursor:pointer;
+    transform:translate(-50%,-50%) scale(.92);
+    filter:drop-shadow(0 0 10px rgba(255,255,255,.45));
+    opacity:0;
+    transition:opacity .18s ease, transform .18s ease;
+    animation:floaty 3.1s ease-in-out infinite;
+    z-index:6;
+  }
+  .daisy.visible{opacity:1; transform:translate(-50%,-50%) scale(1); filter:drop-shadow(0 0 12px rgba(255,255,255,.85))}
+  .daisy:nth-child(2){animation-duration:3.4s}
+  .daisy:nth-child(3){animation-duration:3.8s}
+  .daisy:nth-child(4){animation-duration:3.2s}
+  @keyframes floaty{50%{transform:translate(-50%,-56%) scale(1)}}
+
+  .huntOverlay{
+    position:absolute;
+    top:18px;
+    left:50%;
+    transform:translateX(-50%);
+    width:min(700px, calc(100vw - 28px));
+    z-index:4;
+    opacity:1;
+    transition:opacity .55s ease, transform .55s ease;
+    pointer-events:auto;
+  }
+  .huntOverlay.hidden{
+    opacity:0;
+    transform:translateX(-50%) translateY(-10px);
+  }
+
+  .memory-card{
+    max-width:480px;
+    transform-origin:center;
+    animation:pop .22s ease-out;
+  }
+  @keyframes pop{
+    from{transform:scale(.96); opacity:.4}
+    to{transform:scale(1); opacity:1}
+  }
+  .memory-img{
+    width:100%;
+    aspect-ratio:4/3;
+    border-radius:18px;
+    overflow:hidden;
+    margin:8px 0 12px;
+    border:1px solid rgba(255,255,255,.15);
+    background:linear-gradient(135deg, rgba(255,255,255,.2), rgba(255,255,255,.06));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:rgba(255,255,255,.78);
+    font-weight:700;
+    white-space:pre-line;
+  }
+
+  /* Galaxy */
+  #galaxy{
+    background:
+      radial-gradient(circle at 50% 50%, rgba(137,101,255,.34), transparent 18%),
+      radial-gradient(circle at 35% 65%, rgba(255,255,255,.08), transparent 18%),
+      radial-gradient(circle at 65% 35%, rgba(255,255,255,.09), transparent 14%),
+      linear-gradient(180deg, #190f38, #050816 60%, #02030a);
+  }
+  .petal{
+    position:absolute;
+    color:#fff;
+    font-size:18px;
+    opacity:.82;
+    animation:fall linear infinite;
+    pointer-events:none;
+  }
+  @keyframes fall{
+    from{transform:translateY(-10vh) rotate(0deg); opacity:0}
+    10%{opacity:.8}
+    to{transform:translateY(110vh) rotate(360deg); opacity:0}
+  }
+
+  /* Letter mode */
+  #letterMode{
+    overflow-y:auto;
+    align-items:flex-start;
+    padding:18px 14px 120px;
+  }
+  #letterMode .wrap{
+    min-height:100%;
+    justify-content:flex-start;
+    padding-top:8px;
+  }
+  .letterShell{
+    width:min(760px,100%);
+    margin:0 auto;
+    padding:0;
+    border-radius:30px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(16px);
+    overflow:hidden;
+  }
+  .letterHeader{
+    padding:20px 20px 14px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+  }
+  .letterBody{
+    padding:20px;
+    max-height:min(72vh, 720px);
+    overflow-y:auto;
+    padding-bottom:120px;
+  }
+  .letterBody p{
+    margin:0 0 14px;
+    line-height:1.8;
+    font-size:clamp(1rem,2.3vw,1.14rem);
+    white-space:pre-line;
+  }
+  .letterTitle{
+    margin:0 0 8px;
+    font-size:clamp(1.3rem,3vw,2.1rem);
+    font-weight:800;
+    letter-spacing:.03em;
+  }
+  .letterMeta{
+    color:rgba(255,255,255,.72);
+    margin:0;
+    line-height:1.5;
+  }
+  .finalBtn{
+    min-width:180px;
+  }
+
+  
+  .blowWrap{position:relative;display:inline-block}
+  #flameFx{
+    position:absolute;
+    left:50%;
+    top:-16px;
+    transform:translateX(-50%);
+    transition:all .9s ease;
+  }
+  #puffFx{
+    position:absolute;
+    left:50%;
+    top:-10px;
+    opacity:0;
+    transition:all .9s ease;
+  }
+
+
+  @media (max-width:480px){
+    .card,.bootbox,.overlayCard{padding:20px 16px; border-radius:24px}
+    button{min-width:128px; padding:12px 16px}
+    .title{letter-spacing:.16em}
+    .huntOverlay{top:12px}
+    .letterBody{max-height:64vh}
+  }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+
+<!-- INTRO -->
+<section id="intro" class="screen active">
+  <div class="wrap">
+    <div class="bootbox">
+      <div class="badge"><span class="pulse"></span> NEHUOS BIRTHDAY PROTOCOL</div>
+      <h1 class="title">System Booting...</h1>
+      <p id="bootText" class="big mono typeArea"></p>
+      <div class="row">
+        <button id="bootContinue">Continue</button>
+        <button id="bootDare" class="secondary">Try Resisting</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Q1 -->
+<section id="q1" class="screen">
+  <div class="wrap">
+    <div class="card">
+      <p class="badge">Question 1 of 4</p>
+      <p id="q1Text" class="big typeArea"></p>
+      <div class="row">
+        <button id="q1Yes">Yes</button>
+        <button id="q1Okay" class="secondary">Obviously</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Q2 -->
+<section id="q2" class="screen">
+  <div class="wrap">
+    <div class="card">
+      <p class="badge">Question 2 of 4</p>
+      <div class="stage">
+        <div id="q2Text" class="stageBox">
+          <p class="stageText"></p>
+        </div>
+        <div class="row">
+          <button id="q2Accept">Accept Fate</button>
+          <button id="q2Resist" class="secondary">Try Resisting</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Q3 -->
+<section id="q3" class="screen">
+  <div class="wrap">
+    <div class="card">
+      <p class="badge">Question 3 of 4</p>
+      <p id="q3Text" class="big typeArea"></p>
+      <div class="row">
+        <button id="q3Promise">I Promise</button>
+        <button id="q3Risk" class="secondary">No Guarantees</button>
+      </div>
+      <p id="q3Reply" class="tiny" style="margin-top:8px"></p>
+      <div class="row" id="q3ContinueWrap" style="display:none">
+        <button id="q3Continue" class="finalBtn">Continue</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Q4 -->
+<section id="q4" class="screen">
+  <div class="wrap">
+    <div class="card">
+      <p class="badge">Question 4 of 4</p>
+      <p id="q4Text" class="big typeArea"></p>
+      <div class="row">
+        <button id="q4Go">Fine, Continue</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STORY -->
+<section id="story" class="screen">
+  <div class="wrap">
+    <div class="card">
+      <p class="badge">System Admin</p>
+      <p id="storyText" class="big typeArea"></p>
+      <div class="row">
+        <button id="storyGo">Recover the memories</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HUNT -->
+<section id="hunt" class="screen">
+  <div id="mask"></div>
+  <div id="huntOverlay" class="huntOverlay">
+    <div class="overlayCard">
+      <p class="badge">Memory Hunt</p>
+      <p id="huntText" class="big" style="min-height:0"></p>
+      <p class="tiny" style="margin-top:8px">Drag your finger to search. Tap the daisies when you find them.</p>
+      <div class="row">
+        <button id="startSearch" class="finalBtn">Start Search</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="daisy" id="d1" style="left:18%;top:33%">🌼</div>
+  <div class="daisy" id="d2" style="left:74%;top:44%">🌼</div>
+  <div class="daisy" id="d3" style="left:48%;top:75%">🌼</div>
+</section>
+
+<!-- MEMORY -->
+<section id="memory" class="screen">
+  <div class="wrap">
+    <div class="card memory-card">
+      <p class="badge" id="memBadge">Recovered File</p>
+      <h2 id="memTitle" class="title" style="letter-spacing:.02em"></h2>
+      <div id="memArt" class="memory-img">Recovered Art</div>
+      <p id="memCap" class="big"></p>
+      <p id="memExtra" class="tiny"></p>
+      <div class="row">
+        <button id="memNext">Continue</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GALAXY -->
+<section id="galaxy" class="screen">
+  <div id="petals"></div>
+  <div class="wrap">
+    <div class="card">
+      <p class="badge">Nebula Rebuild</p>
+      <h2 class="title" style="letter-spacing:.02em">There you are, Sunshine</h2>
+      <p id="galaxyText" class="big typeArea"></p>
+      <div class="row">
+        <button id="galaxyGo">Continue</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CAKE -->
+<section id="cake" class="screen">
+  <div class="wrap">
+    <div class="card">
+      <p class="badge">Wish Generator</p>
+      <h2 class="title">Make a wish</h2>
+      <p id="cakeText" class="big typeArea"></p>
+      <div style="font-size:84px;line-height:1;cursor:pointer" id="candle" title="Tap to blow">🕯️</div>
+      <div class="row">
+        <button id="micBtn">Enable Mic</button>
+        <button id="tapBtn" class="secondary">Tap Candle Instead</button>
+      </div>
+      <p id="micStatus" class="tiny">Microphone is optional. Tap candle if you do not want to use it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSITION -->
+<section id="transition" class="screen">
+  <div class="wrap">
+    <div class="card">
+      <p class="badge">Decrypting</p>
+      <p id="transitionText" class="big typeArea"></p>
+      <div class="bar" style="margin-top:12px;height:10px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)">
+        <span id="decryptBar" style="display:block;height:100%;width:0%;background:linear-gradient(90deg, rgba(255,255,255,.95), rgba(223,214,255,.88));transition:width 1.4s ease"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LETTER MODE -->
+<section id="letterMode" class="screen">
+  <div class="wrap">
+    <div class="letterShell">
+      <div class="letterHeader">
+        <p class="badge">Access Granted</p>
+        <h2 class="letterTitle">Happy Birthday, Nehu</h2>
+        <p class="letterMeta">Final message decrypted successfully.</p>
+      </div>
+      <div class="letterBody" id="letterBody">
+        <p id="letterText"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const screens = ["intro","q1","q2","q3","q4","story","hunt","memory","galaxy","cake","transition","letterMode"];
+  const els = Object.fromEntries(screens.map(id => [id, document.getElementById(id)]));
+  const state = {
+    q3Choice: null,
+    found: 0,
+    recoveredFiles: new Set(),
+    petalsCreated: false,
+    micOn: false,
+    micStream: null,
+    audioCtx: null,
+    analyser: null,
+    rafId: null,
+    resistStage: 0,
+    resistLocked: false,
+    huntStarted: false,
+    revealTimers: []
+  };
+
+  function show(id){
+    screens.forEach(s => els[s].classList.remove('active'));
+    els[id].classList.add('active');
+  }
+
+  function typeText(el, text, speed=24, done){
+    el.textContent = "";
+    let i = 0;
+    const timer = setInterval(() => {
+      el.textContent += text[i] || "";
+      i++;
+      if(i >= text.length){
+        clearInterval(timer);
+        if(done) done();
+      }
+    }, speed);
+  }
+
+  function typeLines(el, lines, speed=22, gap=240, done){
+    el.innerHTML = "";
+    let idx = 0;
+    const next = () => {
+      if(idx >= lines.length){ if(done) done(); return; }
+      const line = document.createElement('div');
+      line.className = 'fade';
+      el.appendChild(line);
+      typeText(line, lines[idx], speed, () => {
+        idx++;
+        setTimeout(next, gap);
+      });
+    };
+    next();
+  }
+
+  function setStageText(text){
+    const p = document.querySelector('#q2Text .stageText');
+    p.textContent = text;
+  }
+
+  function buttonEscape(btn, label){
+    const escape = () => {
+      btn.classList.add('running');
+      btn.textContent = label;
+      const x = Math.min(Math.max(14, Math.random() * (window.innerWidth - 180)), window.innerWidth - 170);
+      const y = Math.min(Math.max(14, Math.random() * (window.innerHeight - 90)), window.innerHeight - 70);
+      btn.style.position = 'fixed';
+      btn.style.left = `${x}px`;
+      btn.style.top = `${y}px`;
+    };
+    btn.addEventListener('mouseenter', escape);
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); escape(); }, {passive:false});
+  }
+
+  // Boot sequence
+  const bootText = document.getElementById('bootText');
+  typeLines(bootText, [
+    "Scanning...",
+    "✓ Nehu detected",
+    "✓ Chiyu detected",
+    "✓ Sunshine detected",
+    "⚠ Mallika-e-Kalesh detected",
+    "Classification: Bunny",
+    "Confidence: 99.97%",
+    "Status: Under Observation"
+  ], 22, 250);
+
+  document.getElementById('bootContinue').addEventListener('click', () => show('q1'));
+  buttonEscape(document.getElementById('bootDare'), 'Try Resisting');
+
+  // Q1
+  const q1Text = document.getElementById('q1Text');
+  typeLines(q1Text, [
+    "Are you having a birthday today?",
+    "I need this confirmed before we proceed."
+  ], 22, 220);
+
+  function goToQ2(){
+    show('q2');
+    setStageText("According to my records,\nyou are my Fluffy Bun.\n\nDo you wish to challenge this classification?");
+    state.resistStage = 0;
+    state.resistLocked = false;
+    const resist = document.getElementById('q2Resist');
+    const accept = document.getElementById('q2Accept');
+    resist.style.display = '';
+    resist.textContent = "Try Resisting";
+    resist.disabled = false;
+    accept.disabled = false;
+    accept.textContent = "Accept Fate";
+  }
+  document.getElementById('q1Yes').addEventListener('click', goToQ2);
+  document.getElementById('q1Okay').addEventListener('click', goToQ2);
+
+  // Q2 resistance arc
+  const q2Resist = document.getElementById('q2Resist');
+  const q2Accept = document.getElementById('q2Accept');
+
+  function afterVerdict(){
+    q2Resist.style.display = 'none';
+    q2Accept.disabled = false;
+    q2Accept.textContent = "Accept Fate";
+    setStageText("Verdict:\nYou belong with me.\n\nCase closed.");
+  }
+
+  function stage1(){
+    state.resistLocked = true;
+    q2Resist.disabled = true;
+    q2Accept.disabled = true;
+    setStageText("Oh?");
+    setTimeout(() => setStageText("That's brave."), 1200);
+    setTimeout(() => setStageText("Let's see how strong this case is."), 2600);
+    setTimeout(() => setStageText("Checking your mind..."), 4100);
+    setTimeout(() => setStageText("Still comes back to me."), 5600);
+    setTimeout(() => setStageText("Checking your heart..."), 7200);
+    setTimeout(() => setStageText("Mine."), 8800);
+    setTimeout(() => setStageText("This appeal is not going well for you, Fluffy Bun."), 10200);
+    setTimeout(() => setStageText("You belong with me."), 11800);
+    setTimeout(() => setStageText("Appeal denied.\n\nGo on, babe.\n\nTry resisting again."), 13400);
+    setTimeout(() => {
+      state.resistLocked = false;
+      q2Resist.disabled = false;
+      q2Resist.textContent = "Go on, babe. Try resisting again.";
+      q2Accept.disabled = false;
+      q2Accept.textContent = "Accept Fate ✨";
+    }, 14800);
+  }
+
+  function stage2(){
+    state.resistLocked = true;
+    q2Resist.disabled = true;
+    q2Accept.disabled = true;
+    setStageText("You came back?");
+    setTimeout(() => setStageText("Interesting."), 1200);
+    setTimeout(() => setStageText("Most people would have accepted defeat by now."), 2600);
+    setTimeout(() => setStageText("Reviewing new evidence..."), 4200);
+    setTimeout(() => setStageText("Mind: Still mine."), 5800);
+    setTimeout(() => setStageText("Heart: Definitely mine."), 7200);
+    setTimeout(() => setStageText("Fluffy Bun: Still arguing."), 8600);
+    setTimeout(() => setStageText("Cute."), 9900);
+    setTimeout(() => setStageText("Still mine though."), 11200);
+    setTimeout(() => setStageText("Still not convinced?\n\nGo ahead.\n\nOne last attempt."), 12800);
+    setTimeout(() => {
+      state.resistLocked = false;
+      q2Resist.disabled = false;
+      q2Resist.textContent = "One last attempt";
+      q2Accept.disabled = false;
+      q2Accept.textContent = "Accept Fate, Bunny ✨";
+    }, 14200);
+  }
+
+  function stage3(){
+    state.resistLocked = true;
+    q2Resist.disabled = true;
+    q2Accept.disabled = true;
+    setStageText("Okay.");
+    setTimeout(() => setStageText("Final review."), 1200);
+    setTimeout(() => setStageText("No interruptions."), 2600);
+    setTimeout(() => setStageText("No appeals."), 3900);
+    setTimeout(() => setStageText("No loopholes."), 5200);
+    setTimeout(() => setStageText("Checking mind..."), 6600);
+    setTimeout(() => setStageText("Mine."), 8000);
+    setTimeout(() => setStageText("Checking heart..."), 9400);
+    setTimeout(() => setStageText("Mine."), 10800);
+    setTimeout(() => setStageText("Checking Fluffy Bun..."), 12100);
+    setTimeout(() => setStageText("Very, very mine."), 13600);
+    setTimeout(() => setStageText("Verdict:\nYou belong with me."), 15100);
+    setTimeout(() => setStageText("Case closed."), 16600);
+    setTimeout(() => {
+      state.resistLocked = false;
+      afterVerdict();
+      q2Accept.textContent = "Accept Fate";
+    }, 17800);
+  }
+
+  q2Resist.addEventListener('click', () => {
+    if(state.resistLocked) return;
+    state.resistStage++;
+    if(state.resistStage === 1) stage1();
+    else if(state.resistStage === 2) stage2();
+    else stage3();
+  });
+
+  q2Accept.addEventListener('click', () => {
+    if(state.resistStage < 3){
+      q2Accept.disabled = true;
+      setStageText("Not yet.\n\nYou still have something to finish first.");
+      setTimeout(() => { q2Accept.disabled = false; }, 700);
+      return;
+    }
+    q2Accept.disabled = true;
+    q2Resist.style.display = 'none';
+    q2Accept.textContent = "Accepted";
+    typeLines(document.querySelector('#q2Text .stageText'), [
+      "Good girl.",
+      "That wasn't so difficult, was it?",
+      "Come here, Fluffy Bun.",
+      "I've been saving something for you."
+    ], 24, 650, () => {
+      setTimeout(() => {
+        show('q3');
+        typeLines(document.getElementById('q3Text'), [
+          "One important birthday question.",
+          "Do you promise not to start any unnecessary kalesh today?"
+        ], 22, 220);
+        q2Accept.disabled = false;
+      }, 500);
+    });
+  });
+
+  // Q3
+  const q3Reply = document.getElementById('q3Reply');
+  const q3ContinueWrap = document.getElementById('q3ContinueWrap');
+  document.getElementById('q3Promise').addEventListener('click', () => {
+    state.q3Choice = 'promise';
+    q3Reply.textContent = "Good. That's the safe answer.";
+    q3ContinueWrap.style.display = 'flex';
+  });
+  document.getElementById('q3Risk').addEventListener('click', () => {
+    state.q3Choice = 'risk';
+    q3Reply.textContent = "Honestly? Thank you for your honesty.";
+    q3ContinueWrap.style.display = 'flex';
+  });
+  document.getElementById('q3Continue').addEventListener('click', () => {
+    show('q4');
+    typeLines(document.getElementById('q4Text'), [
+      "Final question before the good part.",
+      "Are you ready to recover the memories hidden in your nebula?"
+    ], 22, 220);
+  });
+
+  // Q4
+  document.getElementById('q4Go').addEventListener('click', () => {
+    show('story');
+    typeLines(document.getElementById('storyText'), [
+      "Wonderful.",
+      "",
+      "Unfortunately your birthday gift has been stolen.",
+      "By you.",
+      "",
+      "I have no idea how you managed that.",
+      "",
+      "Three memories have escaped into your nebula.",
+      "Recover them for me."
+    ], 22, 210);
+  });
+  document.getElementById('storyGo').addEventListener('click', startHunt);
+
+  // Hunt
+  const huntText = document.getElementById('huntText');
+  const huntOverlay = document.getElementById('huntOverlay');
+
+  function setDaisyVisibility(x, y){
+    const daisies = [...document.querySelectorAll('.daisy')];
+    daisies.forEach(d => {
+      const r = d.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const dist = Math.hypot(cx - x, cy - y);
+      if(dist < 110){
+        d.classList.add('visible');
+      }
+    });
+  }
+
+  function startHunt(){
+    show('hunt');
+    state.huntStarted = false;
+    huntOverlay.classList.remove('hidden');
+    typeLines(huntText, [
+      "The lights are out.",
+      "Drag your finger to search.",
+      "Tap the daisies when you find them."
+    ], 22, 240);
+    document.getElementById('startSearch').textContent = "Start Search";
+  }
+
+  document.getElementById('startSearch').addEventListener('click', () => {
+    if(state.huntStarted) return;
+    state.huntStarted = true;
+
+    // Hide the instructions right away so the hunt feels responsive.
+    huntOverlay.classList.add('hidden');
+
+    // Give the user an immediate flashlight position.
+    updateMask(window.innerWidth * 0.5, window.innerHeight * 0.55);
+    setDaisyVisibility(window.innerWidth * 0.5, window.innerHeight * 0.55);
+
+    // Keep the overlay fully out of the way.
+    setTimeout(() => {
+      huntOverlay.style.display = 'none';
+    }, 120);
+  });
+
+  const mask = document.getElementById('mask');
+  function updateMask(x, y){
+    mask.style.background = `radial-gradient(circle at ${x}px ${y}px, transparent 92px, rgba(0,0,0,.97) 170px)`;
+    if(state.huntStarted) setDaisyVisibility(x, y);
+  }
+  document.getElementById('hunt').addEventListener('pointermove', e => updateMask(e.clientX, e.clientY));
+  document.getElementById('hunt').addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    if(t) updateMask(t.clientX, t.clientY);
+  }, {passive:true});
+
+  const memData = [
+    {
+      title: "RECOVERED FILE #001",
+      art: `
+🚇
+🌶️
+
+▸ Hauz Khas
+▸ MH1 Vada Pav`,
+      cap: "Origin of the ritual.",
+      extra: "At some point it stopped being about the vada pav.\nAnd started being about you."
+    },
+    {
+      title: "RECOVERED FILE #002",
+      art: `
+🛵
+💚
+🌹
+🍫`,
+      cap: "Valentine's operation.",
+      extra: "One activa.\nOne office visit.\nOne packet of green lays.\nOne chocolate rose.\nOne choco truffle.\nOne very dusty pair of eyelashes.\n\nMission status: Successful."
+    },
+    {
+      title: "RECOVERED FILE #003",
+      art: `
+🛗
+✨`,
+      cap: "Critical event.",
+      extra: "Location: Lift.\nEvent: First kiss.\n\nNo further details available.\nSome memories belong to us."
+    }
+  ];
+
+  function openMemory(n){
+    state.recoveredFiles.add(n);
+    state.found = state.recoveredFiles.size;
+    const p = memData[n - 1];
+    show('memory');
+    document.getElementById('memBadge').textContent = p.title;
+    document.getElementById('memTitle').textContent = n === 1 ? "The Ritual" : n === 2 ? "The Valentine Mission" : "The Lift";
+    document.getElementById('memArt').textContent = p.art.trim();
+    document.getElementById('memCap').textContent = p.cap;
+    document.getElementById('memExtra').textContent = p.extra;
+  }
+
+  function revealDaisy(id, n){
+    const d = document.getElementById(id);
+    const go = (e) => {
+      if(e) { e.preventDefault?.(); e.stopPropagation?.(); }
+      d.classList.remove('visible');
+      d.style.pointerEvents = 'none';
+      d.style.opacity = '0';
+      setTimeout(() => d.remove(), 120);
+      openMemory(n === 3 ? 3 : n);
+    };
+    d.addEventListener('click', go);
+    d.addEventListener('touchstart', go, {passive:false});
+  }
+  revealDaisy('d1', 1);
+  revealDaisy('d2', 2);
+  revealDaisy('d3', 3);
+
+  function continueFromMemory(){
+    if(state.found < 3){
+      show('hunt');
+      huntOverlay.style.display = 'block';
+      huntOverlay.style.pointerEvents = 'auto';
+      huntOverlay.classList.remove('hidden');
+      typeLines(huntText, [
+        state.found === 1 ? "Good. One more." : "Two down. One left.",
+        "Do not look proud yet.",
+        "The nebula is still hiding things."
+      ], 22, 220);
+      document.getElementById('startSearch').textContent = "Start Search";
+      state.huntStarted = false;
+      state.revealTimers.forEach(t => clearTimeout(t));
+      state.revealTimers = [];
+    } else {
+      showGalaxy();
+    }
+  }
+  document.getElementById('memNext').addEventListener('click', continueFromMemory);
+
+  // Galaxy
+  const petalsLayer = document.getElementById('petals');
+  function createPetals(){
+    if(state.petalsCreated) return;
+    state.petalsCreated = true;
+    for(let i=0;i<28;i++){
+      const p = document.createElement('div');
+      p.className = 'petal';
+      p.textContent = '🌼';
+      p.style.left = (Math.random() * 100) + 'vw';
+      p.style.top = (-10 - Math.random() * 90) + 'vh';
+      p.style.animationDuration = (8 + Math.random() * 8) + 's';
+      p.style.animationDelay = (Math.random() * 3) + 's';
+      p.style.fontSize = (12 + Math.random() * 10) + 'px';
+      petalsLayer.appendChild(p);
+    }
+  }
+
+  const galaxyText = document.getElementById('galaxyText');
+  function showGalaxy(){
+    createPetals();
+    show('galaxy');
+    typeLines(galaxyText, [
+      "All files recovered.",
+      "Rebuilding Nebula...",
+      "Locating Sunshine...",
+      "Found."
+    ], 24, 250);
+  }
+  document.getElementById('galaxyGo').addEventListener('click', () => showCake());
+
+  // Cake and mic
+  const cakeText = document.getElementById('cakeText');
+  const candle = document.getElementById('candle');
+  const micBtn = document.getElementById('micBtn');
+  const tapBtn = document.getElementById('tapBtn');
+  const micStatus = document.getElementById('micStatus');
+
+  function showCake(){
+    show('cake');
+    typeLines(cakeText, [
+      "One task remains.",
+      "Make a wish.",
+      "Then blow out the candle."
+    ], 24, 220);
+  }
+
+  async function enableMic(){
+    if(state.micOn) return;
+    try{
+      micStatus.textContent = "Listening for a gentle blow...";
+      state.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = state.audioCtx.createMediaStreamSource(state.micStream);
+      state.analyser = state.audioCtx.createAnalyser();
+      state.analyser.fftSize = 2048;
+      source.connect(state.analyser);
+      state.micOn = true;
+      micBtn.textContent = "Mic Enabled";
+      listenForBlow();
+    }catch(err){
+      micStatus.textContent = "Microphone unavailable. Tap candle instead.";
+    }
+  }
+
+  function listenForBlow(){
+    if(!state.analyser) return;
+    const data = new Uint8Array(state.analyser.fftSize);
+    const tick = () => {
+      if(!state.analyser) return;
+      state.analyser.getByteTimeDomainData(data);
+      let sum = 0;
+      for(let i=0;i<data.length;i++){
+        const v = (data[i] - 128) / 128;
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / data.length);
+      if(rms > 0.05){
+        blowOut();
+        return;
+      }
+      state.rafId = requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  function blowOut(){
+    if(candle.dataset.blown) return;
+    candle.dataset.blown = "1";
+
+    candle.innerHTML = `<div class="blowWrap">
+      <span>🕯️</span>
+      <span id="flameFx">🔥</span>
+      <span id="puffFx">💨</span>
+    </div>`;
+
+    const flame = document.getElementById('flameFx');
+    const puff = document.getElementById('puffFx');
+
+    requestAnimationFrame(() => {
+      puff.style.opacity = '1';
+      puff.style.transform = 'translate(32px,-10px) scale(1.2)';
+      flame.style.opacity = '0';
+      flame.style.transform = 'translate(24px,-18px) rotate(25deg) scale(.2)';
+    });
+
+    if(state.rafId) cancelAnimationFrame(state.rafId);
+    if(state.micStream) state.micStream.getTracks().forEach(t => t.stop());
+
+    micStatus.textContent = "Wish received.";
+    setTimeout(() => {
+      showTransition();
+    }, 1700);
+  }
+
+  micBtn.addEventListener('click', enableMic);
+  tapBtn.addEventListener('click', blowOut);
+  candle.addEventListener('click', blowOut);
+
+  // Transition + Letter mode
+  const transitionText = document.getElementById('transitionText');
+  const decryptBar = document.getElementById('decryptBar');
+
+  function showTransition(){
+    show('transition');
+    decryptBar.style.width = '0%';
+    typeLines(transitionText, [
+      "Processing wish...",
+      "Wish received.",
+      "Approved.",
+      "Decrypting birthday message..."
+    ], 24, 250, () => {
+      decryptBar.style.width = '100%';
+      setTimeout(() => {
+        showLetterMode();
+      }, 1400);
+    });
+  }
+
+  function showLetterMode(){
+    show('letterMode');
+    document.getElementById('letterText').textContent =
+`To: Nehu
+
+Happy Birthday, my Bunny.
+
+My Sunshine.
+My favorite person.
+
+I still remember the tiny things:
+the Hauz Khas vada pav ritual,
+the green lays and chocolate rose,
+the dusty eyelashes in your office,
+the lift where the first kiss happened,
+the Starbucks checkpoint that somehow felt like an ending and a beginning at once.
+
+I keep ridiculous things like a handkerchief with stolen lipstick on it.
+I keep them because they are yours.
+I keep them because they are us.
+
+Today I only want one thing from you:
+let the birthday happen,
+let the love happen,
+and let me keep being the idiot who is hopelessly attached to you.
+
+[Replace this with your full final poem / letter.]
+
+— Always yours`;
+    const body = document.getElementById('letterBody');
+    body.scrollTop = 0;
+  }
+
+  document.getElementById('secretBtn')?.addEventListener('click', () => {
+    document.getElementById('secret').style.display = 'block';
+  });
+</script>
+</body>
+</html>
