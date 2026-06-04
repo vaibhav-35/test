@@ -352,8 +352,27 @@
 <body>
 <div class="stars"></div>
 
+
+<!-- LOGIN -->
+<section id="login" class="screen active">
+  <div class="wrap">
+    <div class="bootbox">
+      <div class="badge"><span class="pulse"></span> NEHUOS AUTH TERMINAL</div>
+      <h1 class="title">Authentication Required</h1>
+      <p class="big">Enter the password, Bunny.</p>
+      <input id="passwordInput" type="password" placeholder="Password"
+      style="width:100%;max-width:340px;margin-top:12px;padding:14px;border-radius:16px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:white;font-size:16px;">
+      <div class="row">
+        <button id="loginBtn">Enter</button>
+      </div>
+      <p id="loginReply" class="tiny">Hint: You are pretty admirable.</p>
+    </div>
+  </div>
+</section>
+
 <!-- INTRO -->
-<section id="intro" class="screen active">
+
+<section id="intro" class="screen">
   <div class="wrap">
     <div class="bootbox">
       <div class="badge"><span class="pulse"></span> NEHUOS BIRTHDAY PROTOCOL</div>
@@ -540,7 +559,7 @@
 </section>
 
 <script>
-  const screens = ["intro","q1","q2","q3","q4","story","hunt","memory","galaxy","cake","transition","letterMode"];
+  const screens = ["login","intro","q1","q2","q3","q4","story","hunt","memory","galaxy","cake","transition","letterMode"];
   const els = Object.fromEntries(screens.map(id => [id, document.getElementById(id)]));
   const state = {
     q3Choice: null,
@@ -610,6 +629,20 @@
     btn.addEventListener('mouseenter', escape);
     btn.addEventListener('touchstart', (e) => { e.preventDefault(); escape(); }, {passive:false});
   }
+
+  // Login
+  document.getElementById('loginBtn').addEventListener('click', () => {
+    const v = document.getElementById('passwordInput').value.trim();
+    if(v === 'admirableNehu'){
+      show('intro');
+    } else {
+      document.getElementById('loginReply').textContent = 'Access denied.';
+    }
+  });
+
+  document.getElementById('passwordInput').addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') document.getElementById('loginBtn').click();
+  });
 
   // Boot sequence
   const bootText = document.getElementById('bootText');
@@ -1121,3 +1154,4 @@ and let me keep being the idiot who is hopelessly attached to you.
 </script>
 </body>
 </html>
+
