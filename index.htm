@@ -633,7 +633,7 @@
   // Login
   document.getElementById('loginBtn').addEventListener('click', () => {
     const v = document.getElementById('passwordInput').value.trim();
-    if(v === 'admirableNehu'){
+if(v.toLowerCase() === 'admirableneha'){
       show('intro');
     } else {
       document.getElementById('loginReply').textContent = 'Access denied.';
